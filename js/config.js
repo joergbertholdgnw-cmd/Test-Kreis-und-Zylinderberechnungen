@@ -4,5 +4,8 @@ window.KONFIG = {
   SKRIPT_URL: "https://script.google.com/macros/s/AKfycbwkEJ6u87CWHfq8Yt3jbZUScMm_Zl8c-ntOB7Qj1rNT9ua80SwSJWfBHAqYoy8JhHE/exec",
   // Startpasswort als Hash (Klartext steht nicht im Quelltext). Es ist eine Hürde für den Unterricht, kein Schutz gegen Fachleute.
   START_SALZ: "gnw-kz:",
-  START_HASH: "pnkiepqjw8"
+  START_HASH: "pnkiepqjw8",
+  // Notenschlüssel für den Lehrerbereich: ab so viel Prozent der Punkte gibt es diese Note, darunter eine 6.
+  // Annahme, bitte an die Fachkonferenzbeschlüsse anpassen.
+  NOTENSCHLUESSEL: [[90, 1], [77, 2], [65, 3], [50, 4], [25, 5]]
 };

@@ -2,7 +2,7 @@
 // Ob eine Antwort richtig ist, wird hier aus dem Startwert neu berechnet; die Tabelle speichert nur die Eingaben.
 (function () {
   "use strict";
-  const A = window.Aufgaben, S = window.Speicher;
+  const A = window.Aufgaben, S = window.Speicher, K = window.KONFIG;
   const wurzel = document.getElementById("admin");
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const schluessel = (n) => String(n || "").trim().replace(/\s+/g, " ").toLowerCase();
@@ -47,7 +47,11 @@
       const eingaben = Array(A.ANZAHL).fill(null);
       d.antworten.filter((a) => schluessel(a.name) === k && a.seed === t.seed).forEach((a) => { if (a.nr >= 1 && a.nr <= A.ANZAHL) eingaben[a.nr - 1] = String(a.eingabe).replace(/^'/, ""); });
       const ok = aufgaben.map((a, i) => (eingaben[i] === null ? null : A.pruefe(a, eingaben[i]).ok));
-      return { t, aufgaben, eingaben, ok, punkte: ok.filter((x) => x === true).length, beantwortet: eingaben.filter((x) => x !== null).length };
+      const richtige = ok.filter((x) => x === true).length;
+      const punkte = aufgaben.reduce((s, a, i) => s + (ok[i] === true ? a.punkte : 0), 0);
+      // Eine Note gibt es erst, wenn alle Aufgaben beantwortet sind
+      const note = t.ende ? A.note(100 * punkte / A.MAXPUNKTE, K.NOTENSCHLUESSEL) : null;
+      return { t, aufgaben, eingaben, ok, richtige, punkte, note, beantwortet: eingaben.filter((x) => x !== null).length };
     }).sort((a, b) => a.t.name.localeCompare(b.t.name, "de"));
   }
 
@@ -69,6 +73,7 @@
       <p class="meldung" id="meldung" role="alert"></p>
       <section class="karte">
         <h2>${L.length} ${L.length === 1 ? "Teilnahme" : "Teilnahmen"}, ${L.filter((p) => p.t.ende).length} abgeschlossen</h2>
+        ${spiegel(L)}
         <p class="hinweis" style="margin:0">Lösungsquote je Aufgabe (nur unter denen, die sie schon beantwortet haben):</p>
         <ul class="quoten">${quoten.map((q, i) => `<li title="${esc(q.titel)}">Aufg. ${i + 1} · AFB ${q.afb}<b>${q.n ? Math.round(100 * q.richtig / q.n) + " %" : "–"}</b><span class="balken"><i style="width:${q.n ? 100 * q.richtig / q.n : 0}%"></i></span></li>`).join("")}</ul>
       </section>
@@ -90,23 +95,37 @@
     }));
   }
 
+  // Notenspiegel und Durchschnitt über alle abgeschlossenen Teilnahmen
+  function spiegel(L) {
+    const fertig = L.filter((p) => p.note !== null);
+    if (!fertig.length) return `<p class="hinweis">Noten erscheinen, sobald jemand alle zehn Aufgaben beantwortet hat. Schlüssel: ${schluesselText()}.</p>`;
+    const zahl = [1, 2, 3, 4, 5, 6].map((n) => `${n}: ${fertig.filter((p) => p.note === n).length}`).join(" · ");
+    const schnitt = fertig.reduce((s, p) => s + p.note, 0) / fertig.length;
+    return `<p class="hinweis" style="margin-bottom:0.5rem"><strong>Notenspiegel</strong> (${zahl}), Durchschnitt ${A.zahl(schnitt)}.<br>Schlüssel: ${schluesselText()}.</p>`;
+  }
+  function schluesselText() {
+    const s = K.NOTENSCHLUESSEL;
+    return s.map(([ab, n]) => `Note ${n} ab ${ab} %`).join(", ") + ", darunter Note 6";
+  }
+
   function person(p) {
     const status = p.t.ende ? "abgeschlossen" : `${p.beantwortet} von ${A.ANZAHL} beantwortet`;
     return `<details class="person">
       <summary>
         <span class="name">${esc(p.t.name)}</span>
-        <span class="punkte">${p.punkte} / ${A.ANZAHL}</span>
+        <span class="punkte">${p.punkte} / ${A.MAXPUNKTE} P.</span>
+        <span class="note">${p.note === null ? "Note offen" : "Note " + p.note}</span>
         <ul class="chips">${p.ok.map((o, i) => `<li class="chip ${o === true ? "ok" : o === false ? "nein" : "offen"}" title="Aufgabe ${i + 1}">${i + 1}</li>`).join("")}</ul>
         <span class="zeit">${esc(status)} · ${esc(zeit(p.t.start))}</span>
       </summary>
       <div class="inhalt">
         <div class="tabelle"><table>
-          <thead><tr><th>Nr.</th><th>AFB</th><th>Aufgabe</th><th>Eingabe</th><th>Lösung</th><th></th></tr></thead>
+          <thead><tr><th>Nr.</th><th>AFB</th><th>Aufgabe</th><th>Eingabe</th><th>Lösung</th><th>Punkte</th></tr></thead>
           <tbody>${p.aufgaben.map((a, i) => `<tr>
             <td>${a.nr}</td><td>${a.afb}</td><td>${esc(a.titel)}</td>
             <td class="zahl">${p.eingaben[i] === null ? "–" : esc(p.eingaben[i]) + " " + esc(a.einheit)}</td>
             <td class="zahl">${A.fest(a.loesung, a.nk)} ${esc(a.einheit)}</td>
-            <td>${p.ok[i] === true ? '<span class="ok-text">✓</span>' : p.ok[i] === false ? '<span class="nein-text">✗</span>' : ""}</td></tr>`).join("")}</tbody>
+            <td>${p.ok[i] === true ? '<span class="ok-text">✓</span> ' : p.ok[i] === false ? '<span class="nein-text">✗</span> ' : ""}${p.ok[i] === null ? "" : (p.ok[i] ? a.punkte : 0) + " / " + a.punkte}</td></tr>`).join("")}</tbody>
         </table></div>
         <details style="margin-top:0.75rem"><summary class="link" style="cursor:pointer">Aufgabentexte dieser Person</summary>
           <ol style="font-family:var(--sans);font-size:0.85rem;padding-left:1.2rem">${p.aufgaben.map((a) => `<li>${esc(a.text)}</li>`).join("")}</ol>
@@ -139,8 +158,8 @@
 
   function exportieren(L) {
     const feld = (x) => `"${String(x).replace(/"/g, '""')}"`;
-    const kopf = ["Vorname", "Beginn", "Ende", "Richtig"].concat(Array.from({ length: A.ANZAHL }, (_, i) => `A${i + 1} Eingabe`), Array.from({ length: A.ANZAHL }, (_, i) => `A${i + 1} richtig`));
-    const zeilen = L.map((p) => [p.t.name, p.t.start, p.t.ende, p.punkte].concat(p.eingaben.map((e) => (e === null ? "" : e)), p.ok.map((o) => (o === null ? "" : o ? 1 : 0))));
+    const kopf = ["Vorname", "Beginn", "Ende", "Richtig", "Punkte", "Note"].concat(Array.from({ length: A.ANZAHL }, (_, i) => `A${i + 1} Eingabe`), Array.from({ length: A.ANZAHL }, (_, i) => `A${i + 1} richtig`));
+    const zeilen = L.map((p) => [p.t.name, p.t.start, p.t.ende, p.richtige, p.punkte, p.note === null ? "" : p.note].concat(p.eingaben.map((e) => (e === null ? "" : e)), p.ok.map((o) => (o === null ? "" : o ? 1 : 0))));
     const text = "﻿" + [kopf].concat(zeilen).map((z) => z.map(feld).join(";")).join("\r\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));

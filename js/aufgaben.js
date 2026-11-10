@@ -22,6 +22,9 @@
   const zahl = (x) => String(Number(x.toFixed(2))).replace(".", ",");
   const fest = (x, nk) => x.toFixed(nk).replace(".", ",");
   const PI = Math.PI;
+  // Punkte je Aufgabe nach Anforderungsbereich (siehe Erwartungshorizont): 3 · 1 + 4 · 2 + 3 · 2 = 17
+  const PUNKTE = { I: 1, II: 2, III: 2 };
+  const MAXPUNKTE = 17;
 
   function erzeuge(seed) {
     const r = zufall(seed);
@@ -84,7 +87,7 @@
         text: `Ein zylinderförmiges Gefäß mit dem Innenradius R = ${zahl(R)} cm enthält Wasser. Ein massiver Metallzylinder mit dem Radius r = ${zahl(rad)} cm und der Höhe h = ${zahl(h)} cm wird vollständig untergetaucht, das Wasser läuft nicht über. Bestimme, um wie viele Zentimeter der Wasserspiegel steigt.` });
     }
 
-    return T.map((t, i) => Object.assign({ nr: i + 1 }, t));
+    return T.map((t, i) => Object.assign({ nr: i + 1, punkte: PUNKTE[t.afb] }, t));
   }
 
   // Eingabe mit Komma oder Punkt; Einheit und Tausenderpunkte werden nicht akzeptiert
@@ -116,7 +119,13 @@
     return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
   }
 
-  const api = { erzeuge, pruefe, lies, toleranz, hash, zahl, fest, ANZAHL: 10 };
+  // Note aus dem Prozentanteil; schluessel = [[ab Prozent, Note], …] absteigend, darunter 6
+  function note(prozent, schluessel) {
+    for (const [ab, n] of schluessel) if (prozent >= ab - 1e-9) return n;
+    return 6;
+  }
+
+  const api = { erzeuge, pruefe, lies, toleranz, hash, zahl, fest, note, ANZAHL: 10, MAXPUNKTE };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else wurzel.Aufgaben = api;
 })(typeof window !== "undefined" ? window : globalThis);

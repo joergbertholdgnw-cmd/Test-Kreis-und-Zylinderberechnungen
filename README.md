@@ -21,6 +21,8 @@ Als richtig gilt eine Zahl, wenn sie höchstens eine halbe Einheit der verlangte
 
 Nach Passworteingabe: Teilnahmen mit Punkten und Ergebnis je Aufgabe, Lösungsquote je Aufgabe, je Person die Eingaben mit Sollwerten und den Aufgabentexten, CSV-Export, „Zurücksetzen“ einzelner Personen (neuer Versuch) und „Alle Ergebnisse löschen“ (mit Archiv in der Tabelle). Richtig oder falsch wird dort aus dem Startwert neu berechnet; die Tabelle enthält nur die Eingaben.
 
+**Punkte und Note:** AFB I zählt 1 Punkt je Aufgabe, AFB II und III je 2 Punkte, insgesamt 17. Die Note erscheint, sobald alle zehn Aufgaben beantwortet sind, dazu ein Notenspiegel mit Durchschnitt. Der Notenschlüssel (Standard: 90/77/65/50/25 %) steht in `js/config.js` bei `NOTENSCHLUESSEL` und ist eine Annahme, die an die Fachkonferenzbeschlüsse angepasst werden sollte. Punkte und Note stehen auch im CSV-Export.
+
 ## Einrichtung (einmalig, etwa 10 Minuten)
 
 Wie bei den anderen Lernapps: statische Webseite plus Google-Skript, das die Ergebnisse in eine Tabelle schreibt. Für diesen Test eine **eigene** Tabelle mit eigenem Skript anlegen.
