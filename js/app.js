@@ -80,7 +80,7 @@
             <input id="antwort" type="text" inputmode="decimal" autocomplete="off" ${beantwortet ? "disabled" : ""} value="${beantwortet ? esc(sitzung.eingaben[i]) : ""}" aria-describedby="rundung">
             <span class="einheit">${esc(t.einheit)}</span>
           </div>
-          <p class="rundung" id="rundung">Runde auf ${stellen}. Schreibe nur die Zahl, die Einheit steht schon dahinter.</p>
+          <p class="rundung" id="rundung">Runde auf ${stellen}. Schreibe nur die Zahl, die Einheit steht schon dahinter. Abweichungen bis ${Math.round(A.TOLERANZ * 100)} % vom genauen Ergebnis gelten noch als richtig.</p>
           <p class="meldung" id="meldung" role="alert"></p>
           ${beantwortet ? "" : `<button class="knopf" type="submit">Antwort abgeben</button>`}
         </form>

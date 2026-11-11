@@ -15,7 +15,7 @@ Online-Test mit zehn Aufgaben zu Kreis und Zylinder, gestaffelt nach Anforderung
 3. Jede Antwort kann nur **einmal** abgegeben werden. Eine richtige Antwort wird bestätigt („✓ Richtig“), bei einer falschen steht nur „Deine Antwort ist gespeichert“. Lösungen werden nicht gezeigt.
 4. Wer die Seite neu lädt oder sich mit demselben Vornamen wieder anmeldet, bekommt dieselben Aufgaben und macht dort weiter, wo er aufgehört hat. Der Name ist an das erste Gerät gebunden.
 
-Als richtig gilt eine Zahl, wenn sie höchstens eine halbe Einheit der verlangten letzten Stelle oder 0,5 % vom Sollwert abweicht. Dann sind Zwischenrundungen und π ≈ 3,14 erlaubt, π ≈ 3 nicht.
+Als richtig gilt eine Zahl, wenn sie höchstens 5 % vom Sollwert abweicht (`TOLERANZ` in `js/aufgaben.js`). Damit sind Rundungen und π ≈ 3,14 erlaubt. π ≈ 3 weicht um 4,5 bis 4,7 % ab und geht gerade noch durch, zusammen mit Zwischenrundungen aber nicht sicher. Die Zahlenbereiche der Aufgaben sind so gewählt, dass typische Fehlrechnungen (z. B. Durchmesser statt Radius, Mantel statt Oberfläche, lineare Näherung 2p bei der Volumenänderung) deutlich außerhalb der Toleranz liegen.
 
 ## Lehrerbereich (`admin.html`)
 
@@ -49,4 +49,5 @@ Das Startpasswort steht als Hash in `js/config.js`. Ein anderes Passwort erzeugt
 ```
 node tools/dump.js 3 > /dev/null    # Aufgabengenerator läuft
 python tools/nachrechnen.py         # Zweitrechnung aller Sollwerte mit sympy (500 Startwerte)
+node tools/pruefe-fehlbilder.js     # liegen typische Fehlrechnungen außerhalb der Toleranz? (20 000 Startwerte)
 ```

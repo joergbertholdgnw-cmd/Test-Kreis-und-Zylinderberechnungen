@@ -42,24 +42,29 @@
         text: `Eine kreisrunde Pizza hat einen Durchmesser von d = ${zahl(d)} cm. Berechne den Flächeninhalt A der Pizza.` });
     }
     {
-      const rad = ganz(r, 3, 9), h = ganz(r, 5, 15);
+      // Höhe und Radius nicht fast gleich, sonst ergäbe auch die Verwechslung V = πrh² das richtige Ergebnis
+      let rad, h;
+      do { rad = ganz(r, 3, 9); h = ganz(r, 5, 15); } while (Math.abs(h / rad - 1) < 0.25);
       T.push({ afb: "I", titel: "Zylindervolumen", einheit: "cm³", nk: 1, werte: { r: rad, h }, loesung: PI * rad * rad * h,
         text: `Ein Zylinder hat den Radius r = ${zahl(rad)} cm und die Höhe h = ${zahl(h)} cm. Berechne das Volumen V des Zylinders.` });
     }
 
     // AFB II: Formeln verknüpfen, umstellen, Einheiten umrechnen
     {
-      const d = ganz(r, 6, 12), h = ganz(r, 8, 16);
+      // Höhe nicht viel größer als der Durchmesser: Mantel plus eine Grundfläche läge sonst innerhalb der Toleranz
+      const d = ganz(r, 8, 12), h = ganz(r, 8, 14);
       T.push({ afb: "II", titel: "Mantelfläche", einheit: "cm²", nk: 1, werte: { d, h }, loesung: PI * d * h,
         text: `Eine zylinderförmige Konservendose hat einen Durchmesser von d = ${zahl(d)} cm und ist h = ${zahl(h)} cm hoch. Das Etikett bedeckt die Dose rundherum, aber nicht Deckel und Boden. Berechne den Flächeninhalt des Etiketts.` });
     }
     {
-      const rad = ganz(r, 3, 10), h = ganz(r, 6, 20);
+      // Höhe höchstens 3 · Radius: Dann liegen Mantelfläche allein oder Mantel mit nur einer Grundfläche deutlich daneben
+      let rad, h;
+      do { rad = ganz(r, 3, 10); h = ganz(r, rad, Math.min(20, 3 * rad)); } while (Math.abs(rad * h / (2 * (rad + h)) - 1) < 0.25); // V ≠ O
       T.push({ afb: "II", titel: "Oberfläche", einheit: "cm²", nk: 1, werte: { r: rad, h }, loesung: 2 * PI * rad * (rad + h),
         text: `Ein geschlossener Behälter hat die Form eines Zylinders mit dem Radius r = ${zahl(rad)} cm und der Höhe h = ${zahl(h)} cm. Berechne die gesamte Oberfläche O des Behälters.` });
     }
     {
-      const r0 = schritt(r, 2, 12, 0.5);
+      const r0 = schritt(r, 4, 12, 0.5); // ab r = 4 liegt die Verwechslung mit u = πr² deutlich daneben
       const u = Math.round(2 * PI * r0 * 10) / 10;
       T.push({ afb: "II", titel: "Radius aus dem Umfang", einheit: "cm", nk: 2, werte: { u }, loesung: u / (2 * PI),
         text: `Der Umfang eines Kreises beträgt u = ${zahl(u)} cm. Bestimme den Radius r des Kreises.` });
@@ -72,19 +77,23 @@
 
     // AFB III: Sachsituation modellieren, mehrschrittig oder ohne direkte Formel
     {
-      const a = schritt(r, 40, 90, 5), b = schritt(r, 20, 50, 5);
+      // Länge und Breite deutlich verschieden, damit Aufrollen in der falschen Richtung nicht dasselbe Volumen ergibt
+      let a, b;
+      do { a = schritt(r, 40, 90, 5); b = schritt(r, 20, 50, 5); } while (Math.abs(a / b - 1) < 0.25);
       T.push({ afb: "III", titel: "Blech zum Zylinder", einheit: "cm³", nk: 1, werte: { a, b }, loesung: a * a * b / (4 * PI),
         text: `Ein rechteckiges Blech ist ${zahl(a)} cm lang und ${zahl(b)} cm breit. Es wird ohne Überlappung zu einem Zylindermantel gebogen. Dabei wird die Länge von ${zahl(a)} cm zum Umfang der Grundfläche, die Breite von ${zahl(b)} cm ist die Höhe. Ermittle das Volumen dieses Zylinders.` });
     }
     {
-      const p = aus(r, [10, 20, 25, 30, 40, 50]), rad = ganz(r, 3, 8), h = ganz(r, 5, 15);
+      // p nicht klein: Sonst läge die lineare Näherung „2p“ innerhalb der Toleranz
+      const p = aus(r, [30, 40, 50, 60, 80]), rad = ganz(r, 3, 8), h = ganz(r, 5, 15);
       T.push({ afb: "III", titel: "Änderung des Volumens", einheit: "%", nk: 1, werte: { p, r: rad, h }, loesung: ((1 + p / 100) ** 2 - 1) * 100,
         text: `Bei einem Zylinder mit dem Radius r = ${zahl(rad)} cm und der Höhe h = ${zahl(h)} cm wird der Radius um ${p} % vergrößert. Die Höhe bleibt gleich. Ermittle, um wie viel Prozent das Volumen zunimmt.` });
     }
     {
-      const rad = ganz(r, 2, 4), h = ganz(r, 6, 12), R = ganz(r, 5, 8);
+      // Radius des Gefäßes höchstens 3 · r: Sonst läge das Teilen durch die freie Ringfläche (R² − r²) innerhalb der Toleranz
+      const rad = ganz(r, 2, 4), h = ganz(r, 6, 12), R = ganz(r, 5, Math.min(8, 3 * rad));
       T.push({ afb: "III", titel: "Wasserspiegel steigt", einheit: "cm", nk: 2, werte: { r: rad, h, R }, loesung: rad * rad * h / (R * R),
-        text: `Ein zylinderförmiges Gefäß mit dem Innenradius R = ${zahl(R)} cm enthält Wasser. Ein massiver Metallzylinder mit dem Radius r = ${zahl(rad)} cm und der Höhe h = ${zahl(h)} cm wird vollständig untergetaucht, das Wasser läuft nicht über. Bestimme, um wie viele Zentimeter der Wasserspiegel steigt.` });
+        text: `Ein zylinderförmiges Gefäß mit dem Innenradius R = ${zahl(R)} cm enthält Wasser. Ein massiver Metallzylinder mit dem Radius r = ${zahl(rad)} cm und der Höhe h = ${zahl(h)} cm wird vollständig untergetaucht. Das Wasser steht schon vorher höher als der Zylinder und läuft nicht über. Bestimme, um wie viele Zentimeter der Wasserspiegel steigt.` });
     }
 
     return T.map((t, i) => Object.assign({ nr: i + 1, punkte: PUNKTE[t.afb] }, t));
@@ -96,14 +105,16 @@
     return /^[+-]?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null;
   }
 
-  // Richtig, wenn die Abweichung höchstens eine halbe Einheit der verlangten letzten Stelle
-  // oder 0,5 % des Sollwerts beträgt (so verfälschen Zwischenrundungen und π ≈ 3,14 das Ergebnis nicht)
-  const toleranz = (soll, nk) => Math.max(0.5 * Math.pow(10, -nk), 0.005 * Math.abs(soll)) + 1e-9;
+  // Richtig, wenn die Abweichung vom Sollwert höchstens 5 % beträgt. Damit sind Rundungen und π ≈ 3,14 erlaubt;
+  // π ≈ 3 weicht um 4,5 bis 4,7 % ab und geht gerade noch durch, zusammen mit Zwischenrundungen aber nicht sicher.
+  // tools/pruefe-fehlbilder.js stellt sicher, dass typische Fehlrechnungen bei den erzeugten Zahlen deutlich außerhalb liegen.
+  const TOLERANZ = 0.05;
+  const toleranz = (soll) => TOLERANZ * Math.abs(soll) + 1e-9;
 
   function pruefe(aufgabe, eingabe) {
     const x = lies(eingabe);
     if (x === null) return { gueltig: false, ok: false };
-    return { gueltig: true, ok: Math.abs(x - aufgabe.loesung) <= toleranz(aufgabe.loesung, aufgabe.nk), wert: x };
+    return { gueltig: true, ok: Math.abs(x - aufgabe.loesung) <= toleranz(aufgabe.loesung), wert: x };
   }
 
   // Einfacher Hash (cyrb53), nur damit Passwörter nicht im Klartext im Quelltext stehen
@@ -125,7 +136,7 @@
     return 6;
   }
 
-  const api = { erzeuge, pruefe, lies, toleranz, hash, zahl, fest, note, ANZAHL: 10, MAXPUNKTE };
+  const api = { erzeuge, pruefe, lies, toleranz, hash, zahl, fest, note, ANZAHL: 10, MAXPUNKTE, TOLERANZ };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else wurzel.Aufgaben = api;
 })(typeof window !== "undefined" ? window : globalThis);
