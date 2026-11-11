@@ -105,10 +105,10 @@
     return /^[+-]?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : null;
   }
 
-  // Richtig, wenn die Abweichung vom Sollwert höchstens 5 % beträgt. Damit sind Rundungen und π ≈ 3,14 erlaubt;
-  // π ≈ 3 weicht um 4,5 bis 4,7 % ab und geht gerade noch durch, zusammen mit Zwischenrundungen aber nicht sicher.
+  // Richtig, wenn die Abweichung vom Sollwert höchstens 2 % beträgt. Damit sind Rundungen auf zwei Nachkommastellen
+  // und π ≈ 3,14 (0,05 % Abweichung) erlaubt, π ≈ 3 (4,5 bis 4,7 %) und grob gerundete Zwischenergebnisse nicht.
   // tools/pruefe-fehlbilder.js stellt sicher, dass typische Fehlrechnungen bei den erzeugten Zahlen deutlich außerhalb liegen.
-  const TOLERANZ = 0.05;
+  const TOLERANZ = 0.02;
   const toleranz = (soll) => TOLERANZ * Math.abs(soll) + 1e-9;
 
   function pruefe(aufgabe, eingabe) {

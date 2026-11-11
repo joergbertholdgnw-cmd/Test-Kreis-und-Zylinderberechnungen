@@ -15,7 +15,7 @@ Online-Test mit zehn Aufgaben zu Kreis und Zylinder, gestaffelt nach Anforderung
 3. Jede Antwort kann nur **einmal** abgegeben werden. Eine richtige Antwort wird bestätigt („✓ Richtig“), bei einer falschen steht nur „Deine Antwort ist gespeichert“. Lösungen werden nicht gezeigt.
 4. Wer die Seite neu lädt oder sich mit demselben Vornamen wieder anmeldet, bekommt dieselben Aufgaben und macht dort weiter, wo er aufgehört hat. Der Name ist an das erste Gerät gebunden.
 
-Als richtig gilt eine Zahl, wenn sie höchstens 5 % vom Sollwert abweicht (`TOLERANZ` in `js/aufgaben.js`). Damit sind Rundungen und π ≈ 3,14 erlaubt. π ≈ 3 weicht um 4,5 bis 4,7 % ab und geht gerade noch durch, zusammen mit Zwischenrundungen aber nicht sicher. Die Zahlenbereiche der Aufgaben sind so gewählt, dass typische Fehlrechnungen (z. B. Durchmesser statt Radius, Mantel statt Oberfläche, lineare Näherung 2p bei der Volumenänderung) deutlich außerhalb der Toleranz liegen.
+Als richtig gilt eine Zahl, wenn sie höchstens 2 % vom Sollwert abweicht (`TOLERANZ` in `js/aufgaben.js`). Damit sind Rundungen auf zwei Nachkommastellen und π ≈ 3,14 erlaubt. π ≈ 3 (4,5 bis 4,7 % Abweichung) und grob gerundete Zwischenergebnisse gelten als falsch. Die Zahlenbereiche der Aufgaben sind so gewählt, dass typische Fehlrechnungen (z. B. Durchmesser statt Radius, Mantel statt Oberfläche, lineare Näherung 2p bei der Volumenänderung) deutlich außerhalb der Toleranz liegen.
 
 ## Lehrerbereich (`admin.html`)
 
