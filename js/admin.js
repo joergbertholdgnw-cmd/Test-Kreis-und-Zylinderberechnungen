@@ -77,7 +77,7 @@
         <p class="hinweis" style="margin:0">Lösungsquote je Aufgabe (nur unter denen, die sie schon beantwortet haben):</p>
         <ul class="quoten">${quoten.map((q, i) => `<li title="${esc(q.titel)}">Aufg. ${i + 1} · AFB ${q.afb}<b>${q.n ? Math.round(100 * q.richtig / q.n) + " %" : "–"}</b><span class="balken"><i style="width:${q.n ? 100 * q.richtig / q.n : 0}%"></i></span></li>`).join("")}</ul>
       </section>
-      ${L.length ? L.map(person).join("") : `<section class="karte"><p class="hinweis" style="margin:0">Noch keine Teilnahmen. Sobald sich jemand mit Vornamen und Startpasswort anmeldet, erscheint sie oder er hier.</p></section>`}`;
+      ${L.length ? uebersicht(L, muster) : `<section class="karte"><p class="hinweis" style="margin:0">Noch keine Teilnahmen. Sobald sich jemand mit Vornamen und Startpasswort anmeldet, erscheint sie oder er hier.</p></section>`}`;
 
     document.getElementById("neu").addEventListener("click", laden);
     document.getElementById("raus").addEventListener("click", () => { passwort = ""; login(); });
@@ -88,6 +88,12 @@
       await laden();
       meldung(r.archiv ? `Gelöscht. Vorher gesichert als „${r.archiv}“ in der Tabelle.` : "Gelöscht.", true);
     });
+    wurzel.querySelectorAll("[data-auf]").forEach((b) => b.addEventListener("click", () => {
+      const zeileDetail = document.getElementById("detail-" + b.dataset.auf);
+      zeileDetail.hidden = !zeileDetail.hidden;
+      b.setAttribute("aria-expanded", String(!zeileDetail.hidden));
+      b.firstElementChild.textContent = zeileDetail.hidden ? "▸ " : "▾ ";
+    }));
     wurzel.querySelectorAll("[data-loeschen]").forEach((b) => bestaetigen(b, "Wirklich zurücksetzen?", async () => {
       const r = await S.freigeben(passwort, b.dataset.loeschen);
       if (!r.ok) return meldung(r.fehler);
@@ -108,31 +114,43 @@
     return s.map(([ab, n]) => `Note ${n} ab ${ab} %`).join(", ") + ", darunter Note 6";
   }
 
-  function person(p) {
-    const status = p.t.ende ? "abgeschlossen" : `${p.beantwortet} von ${A.ANZAHL} beantwortet`;
-    return `<details class="person">
-      <summary>
-        <span class="name">${esc(p.t.name)}</span>
-        <span class="punkte">${p.punkte} / ${A.MAXPUNKTE} P.</span>
-        <span class="note">${p.note === null ? "Note offen" : "Note " + p.note}</span>
-        <ul class="chips">${p.ok.map((o, i) => `<li class="chip ${o === true ? "ok" : o === false ? "nein" : "offen"}" title="Aufgabe ${i + 1}">${i + 1}</li>`).join("")}</ul>
-        <span class="zeit">${esc(status)} · ${esc(zeit(p.t.start))}</span>
-      </summary>
-      <div class="inhalt">
-        <div class="tabelle"><table>
-          <thead><tr><th>Nr.</th><th>AFB</th><th>Aufgabe</th><th>Eingabe</th><th>Lösung</th><th>Punkte</th></tr></thead>
-          <tbody>${p.aufgaben.map((a, i) => `<tr>
-            <td>${a.nr}</td><td>${a.afb}</td><td>${esc(a.titel)}</td>
-            <td class="zahl">${p.eingaben[i] === null ? "–" : esc(p.eingaben[i]) + " " + esc(a.einheit)}</td>
-            <td class="zahl">${A.fest(a.loesung, a.nk)} ${esc(a.einheit)}</td>
-            <td>${p.ok[i] === true ? '<span class="ok-text">✓</span> ' : p.ok[i] === false ? '<span class="nein-text">✗</span> ' : ""}${p.ok[i] === null ? "" : (p.ok[i] ? a.punkte : 0) + " / " + a.punkte}</td></tr>`).join("")}</tbody>
-        </table></div>
-        <details style="margin-top:0.75rem"><summary class="link" style="cursor:pointer">Aufgabentexte dieser Person</summary>
-          <ol style="font-family:var(--sans);font-size:0.85rem;padding-left:1.2rem">${p.aufgaben.map((a) => `<li>${esc(a.text)}</li>`).join("")}</ol>
-        </details>
-        <button class="knopf klein zweit" type="button" data-loeschen="${esc(p.t.name)}" style="margin-top:0.75rem">Zurücksetzen (neuer Versuch)</button>
-      </div>
-    </details>`;
+  // Eine Zeile je Person: Punkte, Note und das Ergebnis jeder Aufgabe nebeneinander; Klick auf den Namen zeigt die Einzelheiten
+  function uebersicht(L, muster) {
+    return `<div class="tabelle"><table class="ergebnisse">
+      <thead><tr><th>Vorname</th><th>Punkte</th><th>Note</th>${muster.map((m, i) => `<th class="c" title="${esc(m.titel)}">${i + 1}<small>AFB ${m.afb}</small></th>`).join("")}<th>Stand</th></tr></thead>
+      <tbody>${L.map(zeile).join("")}</tbody></table></div>`;
+  }
+
+  function zeile(p, idx) {
+    const status = p.t.ende ? "abgeschlossen" : `${p.beantwortet} von ${A.ANZAHL}`;
+    const zellen = p.ok.map((o, i) => {
+      const a = p.aufgaben[i];
+      const hinweis = p.eingaben[i] === null ? `Aufgabe ${a.nr}: noch nicht beantwortet` : `Aufgabe ${a.nr}: Eingabe ${p.eingaben[i]} ${a.einheit}, Lösung ${A.fest(a.loesung, a.nk)} ${a.einheit}`;
+      return `<td class="c ${o === true ? "ok-text" : o === false ? "nein-text" : "offen-text"}" title="${esc(hinweis)}">${o === true ? "✓" : o === false ? "✗" : "·"}</td>`;
+    }).join("");
+    return `<tr class="person-zeile">
+      <td><button class="link name" type="button" data-auf="${idx}" aria-expanded="false"><span aria-hidden="true">▸ </span>${esc(p.t.name)}</button></td>
+      <td class="zahl">${p.punkte} / ${A.MAXPUNKTE}</td>
+      <td class="c"><b>${p.note === null ? "–" : p.note}</b></td>
+      ${zellen}
+      <td class="stand">${esc(status)} · ${esc(zeit(p.t.start))}</td>
+    </tr>
+    <tr class="detail" id="detail-${idx}" hidden><td colspan="${A.ANZAHL + 4}">${detail(p)}</td></tr>`;
+  }
+
+  function detail(p) {
+    return `<div class="tabelle"><table>
+        <thead><tr><th>Nr.</th><th>AFB</th><th>Aufgabe</th><th>Eingabe</th><th>Lösung</th><th>Punkte</th></tr></thead>
+        <tbody>${p.aufgaben.map((a, i) => `<tr>
+          <td>${a.nr}</td><td>${a.afb}</td><td>${esc(a.titel)}</td>
+          <td class="zahl">${p.eingaben[i] === null ? "–" : esc(p.eingaben[i]) + " " + esc(a.einheit)}</td>
+          <td class="zahl">${A.fest(a.loesung, a.nk)} ${esc(a.einheit)}</td>
+          <td>${p.ok[i] === true ? '<span class="ok-text">✓</span> ' : p.ok[i] === false ? '<span class="nein-text">✗</span> ' : ""}${p.ok[i] === null ? "" : (p.ok[i] ? a.punkte : 0) + " / " + a.punkte}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <details style="margin-top:0.75rem"><summary class="link" style="cursor:pointer">Aufgabentexte dieser Person</summary>
+        <ol style="font-family:var(--sans);font-size:0.85rem;padding-left:1.2rem">${p.aufgaben.map((a) => `<li>${esc(a.text)}</li>`).join("")}</ol>
+      </details>
+      <button class="knopf klein zweit" type="button" data-loeschen="${esc(p.t.name)}" style="margin-top:0.75rem">Zurücksetzen (neuer Versuch)</button>`;
   }
 
   // Zweistufig (erst klicken, dann bestätigen), damit ein Fehlklick nichts löscht
